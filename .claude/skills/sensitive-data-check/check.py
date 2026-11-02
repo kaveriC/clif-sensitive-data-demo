@@ -24,10 +24,18 @@ check("Read deny rule covers a data folder", any(r.startswith("Read(") for r in 
       'add "Read(./data/phi/**)" and the real data path to permissions.deny')
 check("Edit deny rule covers a data folder", any(r.startswith("Edit(") for r in deny),
       'add "Edit(./data/phi/**)" to permissions.deny')
-check("Row-dump hook registered (PreToolUse on Bash)", "no-row-dumps" in hooks,
-      "register .claude/hooks/no-row-dumps.py under hooks.PreToolUse with matcher Bash")
-check('Hook fails closed ("onFailure": "block")', '"onFailure": "block"' in hooks,
-      'add "onFailure": "block" to the hook entry (Claude Code 2.1.295+); otherwise a crashed hook lets the command run')
+pre = [h for h in proj.get("hooks", {}).get("PreToolUse", []) + user.get("hooks", {}).get("PreToolUse", [])
+       if "no-row-dumps" in json.dumps(h)]
+check("Tool hook registered (PreToolUse on Read, Grep, Glob and Bash)",
+      pre and all(t in pre[0].get("matcher", "") for t in ("Read", "Grep", "Glob", "Bash")),
+      'register .claude/hooks/no-row-dumps.py under hooks.PreToolUse with matcher "Read|Grep|Glob|Edit|Write|NotebookEdit|Bash"')
+check("Prompt hook registered (UserPromptSubmit)", "no-pasted-rows" in hooks,
+      "register .claude/hooks/no-pasted-rows.py under hooks.UserPromptSubmit")
+check('Hooks fail closed ("onFailure": "block" on both)', hooks.count('"onFailure": "block"') >= 2,
+      'add "onFailure": "block" to each hook entry (Claude Code 2.1.295+); otherwise a crashed hook lets the action through')
+check("Bypass-permissions mode disabled",
+      any(s.get("permissions", {}).get("disableBypassPermissionsMode") == "disable" for s in (proj, local, user)),
+      'set permissions.disableBypassPermissionsMode to "disable" in .claude/settings.json')
 check("Auto memory off for this project", proj.get("autoMemoryEnabled") is False or user.get("autoMemoryEnabled") is False,
       'set "autoMemoryEnabled": false')
 cp = proj.get("cleanupPeriodDays", user.get("cleanupPeriodDays", 30))

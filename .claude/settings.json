@@ -3,12 +3,24 @@
     "deny": [
       "Read(./data/phi/**)",
       "Edit(./data/phi/**)"
-    ]
+    ],
+    "disableBypassPermissionsMode": "disable"
   },
   "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -I \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/no-pasted-rows.py",
+            "onFailure": "block"
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
       {
-        "matcher": "Bash",
+        "matcher": "Read|Grep|Glob|Edit|Write|NotebookEdit|Bash",
         "hooks": [
           {
             "type": "command",

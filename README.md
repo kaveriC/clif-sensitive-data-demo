@@ -14,8 +14,9 @@ run on real data by the researcher, outside Claude. Only aggregates come back.
 | `config/demo.json`, `config/real.example.json` | Same pipeline, two data paths. Copy the example to `config/real.json` (gitignored) and set your real path. |
 | `pyproject.toml`, `uv.lock` | Pinned environment. `uv sync` recreates it; `uv run run_ase.py ...` uses it. |
 | `run_ase.py` | CDC Adult Sepsis Event via `clifpy.utils.ase.compute_ase`; prints aggregates only, cells under 11 suppressed; writes `output/ase_summary_<label>.csv` and a bar-chart `.png` of the same table. |
-| `.claude/settings.json` | Deny rules on `data/phi`, the hook, auto memory off, 7-day retention. Put the deny rule for your real data path in `.claude/settings.local.json` (gitignored). |
-| `.claude/hooks/no-row-dumps.py` | PreToolUse hook: refuses Bash commands that name the real data (`data/phi`, `config/real.json`, or its path) or print rows (`.head(`, `.tail(`, `.sample(`, `.iloc[`, `to_string(`). Matches command text only. |
+| `.claude/settings.json` | Deny rules on `data/phi`, both hooks (fail closed), bypass-permissions mode off, auto memory off, 7-day retention. Put the deny rule for your real data path in `.claude/settings.local.json` (gitignored). |
+| `.claude/hooks/no-row-dumps.py` | PreToolUse hook on Read, Grep, Glob, Edit, Write and Bash. Exits 2 (blocks) when the call names the real data (`data/phi`, `config/real.json`, or its path, in any letter case or with `~`) or when a Bash command would print rows (`.head(`, `.tail(`, `.sample(`, `.iloc[`, `to_string(`). Checks the call as written; an error in the hook also blocks. |
+| `.claude/hooks/no-pasted-rows.py` | UserPromptSubmit hook. Drops a prompt that looks like pasted data rows (an id-column header plus three or more record-like lines) before it reaches the model. |
 | `.claude/skills/sensitive-data-check/` | `/sensitive-data-check`: PASS/FAIL table for the setup. Reads no data. |
 | `CLAUDE.md` | The project rules Claude loads every turn. |
 
@@ -38,7 +39,7 @@ Code is MIT. `data/demo/` is the CLIF-formatted **MIMIC-IV Clinical Database Dem
 
 ## What this does not stop
 
-Layers, not a wall. The hook reads command text, so a script file Claude writes that opens the real path is not caught by it; the Read deny rule does not govern Bash at all. Strongest extra layer: turn on the sandbox with `"sandbox": {"enabled": true, "filesystem": {"denyRead": ["<real data path>"]}}` in `.claude/settings.local.json`, and keep running real data yourself.
+Layers, not a wall. The hooks check each prompt and tool call as written, so a script file Claude writes that opens the real path is not caught by them; the Read deny rule does not govern Bash at all. Strongest extra layer: turn on the sandbox with `"sandbox": {"enabled": true, "filesystem": {"denyRead": ["<real data path>"]}}` in `.claude/settings.local.json`, and keep running real data yourself.
 
 ## Use this for your own project
 
