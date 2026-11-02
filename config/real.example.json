@@ -1,0 +1,7 @@
+{
+  "data_directory": "/path/to/your/real/CLIF/data",
+  "filetype": "parquet",
+  "timezone": "US/Eastern",
+  "output_directory": "output",
+  "label": "real"
+}

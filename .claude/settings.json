@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(./data/phi/**)",
+      "Edit(./data/phi/**)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -I \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/no-row-dumps.py",
+            "onFailure": "block"
+          }
+        ]
+      }
+    ]
+  },
+  "autoMemoryEnabled": false,
+  "cleanupPeriodDays": 7
+}

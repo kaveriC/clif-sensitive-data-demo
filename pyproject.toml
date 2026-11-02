@@ -1,0 +1,19 @@
+[project]
+name = "clif-sensitive-data-demo"
+version = "0.1.0"
+description = "Code goes to the data; data never goes to the model. CDC Adult Sepsis Event on CLIF data, aggregates only."
+requires-python = ">=3.10"
+dependencies = [
+    "clifpy>=2.1.0",
+    "pandas",
+    "matplotlib",
+    "polars<2",  # clifpy 2.1 falls back to DuckDB with a warning on polars 2.x
+]
+
+[tool.uv]
+package = false  # a script, not a library: nothing to build or install
+
+[tool.uv.sources]
+# shortcut: pinned to the commit with the ASE date/timestamp fix (unreleased as of clifpy 2.1.0);
+# drop this block and require clifpy>=2.1.1 once that fix is on PyPI
+clifpy = { git = "https://github.com/Common-Longitudinal-ICU-data-Format/clifpy", rev = "1abce93f8fd1209dcfbb70c2c3ba64dccea48576" }

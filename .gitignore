@@ -1,0 +1,8 @@
+output/
+data/phi/*
+!data/phi/README.md
+.venv/
+__pycache__/
+config/real.json
+.claude/settings.local.json
+.DS_Store
