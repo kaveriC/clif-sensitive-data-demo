@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Checklist for a project that handles sensitive data with Claude Code. Prints PASS/FAIL only; reads no data."""
-import json, os, pathlib, subprocess, sys
+import hashlib, json, os, pathlib, re, subprocess, sys
 
 root = pathlib.Path(os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd())
 results = []
@@ -31,6 +31,8 @@ check("Tool hook registered (PreToolUse on Read, Grep, Glob and Bash)",
       'register .claude/hooks/no-row-dumps.py under hooks.PreToolUse with matcher "Read|Grep|Glob|Edit|Write|NotebookEdit|Bash"')
 check("Prompt hook registered (UserPromptSubmit)", "no-pasted-rows" in hooks,
       "register .claude/hooks/no-pasted-rows.py under hooks.UserPromptSubmit")
+check("Output scanner registered (PostToolUse on Read and Bash, advisory)", "phi-scan" in hooks,
+      "register .claude/hooks/phi-scan.py under hooks.PostToolUse with matcher Read|Bash")
 check('Hooks fail closed ("onFailure": "block" on both)', hooks.count('"onFailure": "block"') >= 2,
       'add "onFailure": "block" to each hook entry (Claude Code 2.1.295+); otherwise a crashed hook lets the action through')
 check("Bypass-permissions mode disabled",
@@ -69,6 +71,22 @@ check("Real data lives outside the project folder",
       "move real data out of the project; point config/real.json at it")
 check("CLAUDE.md states the no-rows rule", (root / "CLAUDE.md").exists() and "Never print rows" in (root / "CLAUDE.md").read_text(),
       "add the no-rows rule to CLAUDE.md")
+leak = []  # no hook guards what loads at startup, so check it here
+for p in [root / "CLAUDE.md", *sorted((root / ".claude").rglob("*.md"))]:
+    t = p.read_text(errors="ignore") if p.exists() else ""
+    if (real_dir and real_dir.rstrip("/") in t) or re.search(r"^\s*\d+\s*[,\t|]\s*\d+", t, re.M):
+        leak.append(str(p.relative_to(root)))
+check("Startup context holds no real path or data rows (CLAUDE.md, .claude/**/*.md)", not leak,
+      "remove the path or rows from: " + ", ".join(leak))
+ap = root / ".claude" / "approved-scripts"
+if ap.exists():
+    stale = [s for line in ap.read_text().splitlines() if len(line.split()) == 2 for sha, s in [line.split()]
+             if not (root / s).is_file() or hashlib.sha256((root / s).read_bytes()).hexdigest() != sha]
+    check("Approved real-data scripts still match their pinned hash", not stale,
+          "re-review, then: shasum -a 256 <script> > .claude/approved-scripts  (" + ", ".join(stale) + ")")
+else:
+    results.append(("Approved real-data scripts (none: Claude never runs real data)", None,
+                    "after review: shasum -a 256 run_ase.py >> .claude/approved-scripts"))
 
 width = max(len(n) for n, _, _ in results) + 2
 print(f"{'check':{width}} result")

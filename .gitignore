@@ -9,3 +9,4 @@ config/real.json
 
 # written live by Claude from TASK.md; the finished copy is on the solution branch
 run_ase.py
+.clif-phi-paths
