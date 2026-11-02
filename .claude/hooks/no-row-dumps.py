@@ -26,7 +26,7 @@ try:
     call = " ".join(str(inp.get(k, "")) for k in ("command", "file_path", "path", "pattern", "notebook_path"))
 
     root = pathlib.Path(os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd())
-    protected = ["data/phi", "config/real.json"]
+    protected = ["data/phi", "config/real.json", "output/logs"]  # clifpy's own logs may quote values after a real run
     cfg = root / "config" / "real.json"
     real = (json.load(open(cfg)).get("data_directory") or "").rstrip("/") if cfg.exists() else ""
     home = os.path.expanduser("~")

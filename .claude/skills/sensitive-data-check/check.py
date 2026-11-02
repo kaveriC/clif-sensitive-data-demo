@@ -58,8 +58,11 @@ else:
     check("Project is a git repo (so tracked files can be audited)", False, "git init")
 real_dir = load(root / "config" / "real.json").get("data_directory", "")
 if real_dir:
+    def covers(rule, path):  # a deny on a parent folder covers the data folder
+        body = rule[len("Read("):-1].strip("/").rstrip("/*") if rule.startswith("Read(") else ""
+        return bool(body) and (path.strip("/") + "/").startswith(body + "/")
     check("Real data path from config/real.json is Read-denied",
-          any(r.startswith("Read(") and real_dir.rstrip("/").lstrip("/") in r for r in deny),
+          any(covers(r, real_dir) for r in deny),
           f'add "Read(/{real_dir.rstrip("/")}/**)" to .claude/settings.local.json permissions.deny')
 check("Real data lives outside the project folder",
       not any(p.suffix == ".parquet" for p in (root / "data" / "phi").glob("*")) if (root / "data" / "phi").exists() else True,
