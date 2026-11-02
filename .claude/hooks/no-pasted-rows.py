@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""UserPromptSubmit hook: refuse a prompt that looks like pasted data rows (slot 1 on the deck: user messages).
+"""UserPromptSubmit hook: refuse a prompt that looks like pasted data rows (door 1 on the deck: user messages).
 
 Blocks the prompt (exit 2; Claude Code drops it and shows this reason to you, not to the model) when the
 text has a header line naming a CLIF key column (patient_id, hospitalization_id, mrn) and at least three

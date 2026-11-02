@@ -44,7 +44,7 @@ cp = proj.get("cleanupPeriodDays", user.get("cleanupPeriodDays", 30))
 check(f"Transcript retention set ({cp} days)", cp <= 14, 'set "cleanupPeriodDays": 7')
 sandbox_on = any(isinstance(s.get("sandbox"), dict) and s["sandbox"].get("enabled") is True for s in (proj, local, user))
 results.append(("Sandbox enabled (strongest layer; optional here)", sandbox_on if sandbox_on else None,
-                '"sandbox": {"enabled": true, "filesystem": {"denyRead": ["<real data path>"]}}'))
+                'in .claude/settings.local.json: "sandbox": {"enabled": true, "filesystem": {"denyRead": ["<real data path>"], "allowWrite": ["~/.cache/uv", "~/.matplotlib"]}}'))
 
 gi = (root / ".gitignore").read_text() if (root / ".gitignore").exists() else ""
 check(".gitignore excludes output/ and data/phi/", "output/" in gi and "data/phi" in gi,
@@ -66,6 +66,9 @@ if real_dir:
     check("Real data path from config/real.json is Read-denied",
           any(covers(r, real_dir) for r in deny),
           f'add "Read(/{real_dir.rstrip("/")}/**)" to .claude/settings.local.json permissions.deny')
+else:
+    check("config/real.json present, so the hook knows the real data path", False,
+          "cp config/real.example.json config/real.json and set data_directory; copy your .claude/settings.local.json too")
 check("Real data lives outside the project folder",
       not any(p.suffix == ".parquet" for p in (root / "data" / "phi").glob("*")) if (root / "data" / "phi").exists() else True,
       "move real data out of the project; point config/real.json at it")

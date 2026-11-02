@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""PreToolUse hook: keep real data out of Claude's session (hook B on the deck, slot 2: tool results).
+"""PreToolUse hook: keep real data out of Claude's session (hook B on the deck, door 2: tool results).
 
 Same contract as the clif-icu plugin's hooks/phi_guard.py
 (https://github.com/Common-Longitudinal-ICU-data-Format/skills): registered on Read, Grep, Glob, Edit,
